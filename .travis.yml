@@ -34,7 +34,7 @@ script:
   - ./gradlew clean test
   - npm test -- -u
   - ./gradlew bootWar -Pprod -x test
-  - sonar-scanner
+  - ./gradlew sonarqube
 notifications:
   webhooks:
     on_success: change  # options: [always|never|change] default: always
