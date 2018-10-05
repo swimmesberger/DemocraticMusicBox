@@ -1,4 +1,4 @@
-# [![Build Status](https://travis-ci.com/swimmesberger/DemocraticMusicBox.svg?branch=master)](https://travis-ci.com/swimmesberger/DemocraticMusicBox)
+# DemocraticMusicBox [![Build Status](https://travis-ci.com/swimmesberger/DemocraticMusicBox.svg?branch=master)](https://travis-ci.com/swimmesberger/DemocraticMusicBox)
 This application was generated using JHipster 5.4.1, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v5.4.1](https://www.jhipster.tech/documentation-archive/v5.4.1).
 
 ## Development
