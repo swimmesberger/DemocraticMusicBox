@@ -1,4 +1,4 @@
-# DemocraticMusicBox [![Build Status](https://travis-ci.com/swimmesberger/DemocraticMusicBox.svg?branch=master)](https://travis-ci.com/swimmesberger/DemocraticMusicBox) [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=swimmesberger-github:swimmesberger_DemocraticMusicBox&metric=alert_status)](https://sonarcloud.io/dashboard?id=swimmesberger-github:swimmesberger_DemocraticMusicBox)
+# DemocraticMusicBox [![Build Status](https://travis-ci.com/swimmesberger/DemocraticMusicBox.svg?branch=master)](https://travis-ci.com/swimmesberger/DemocraticMusicBox) [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=swimmesberger_DemocraticMusicBox&metric=alert_status)](https://sonarcloud.io/dashboard?id=swimmesberger_DemocraticMusicBox)
 This application was generated using JHipster 5.4.1, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v5.4.1](https://www.jhipster.tech/documentation-archive/v5.4.1).
 
 ## Development
