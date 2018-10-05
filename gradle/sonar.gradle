@@ -13,7 +13,15 @@ jacocoTestReport {
 
 sonarqube {
     properties {
-        property "sonar.host.url", "http://localhost:9001"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.projectName", "DemocraticMusicBox"
+        property "sonar.projectKey", "swimmesberger_DemocraticMusicBox"
+        property "sonar.projectVersion", "${project.version}"
+        property "sonar.links.homepage", "https://github.com/swimmesberger/DemocraticMusicBox/"
+        property "sonar.links.ci", "https://travis-ci.com/swimmesberger/DemocraticMusicBox"
+        property "sonar.links.scm", "https://github.com/swimmesberger/DemocraticMusicBox/"
+        property "sonar.links.issue", "https://github.com/swimmesberger/DemocraticMusicBox/issues"
+        
         property "sonar.exclusions", "src/main/webapp/content/**/*.*,src/main/webapp/i18n/*.js, build/www/**/*.*"
 
         property "sonar.issue.ignore.multicriteria", "S3437,S4684,UndocumentedApi,BoldAndItalicTagsCheck"
@@ -41,5 +49,6 @@ sonarqube {
         property "sonar.junit.reportPaths", "${project.buildDir}/test-results/test"
         property "sonar.sources", "${project.projectDir}/src/main/"
         property "sonar.tests", "${project.projectDir}/src/test/"
+        property "sonar.java.binaries", "${project.buildDir}/classes/java/main/"
     }
 }
