@@ -225,6 +225,8 @@ dependencies {
     }
     compile "io.springfox:springfox-bean-validators"
     compile "org.postgresql:postgresql"
+    compile group: 'org.jsoup', name: 'jsoup', version: '1.11.3'
+
     liquibaseRuntime "org.postgresql:postgresql"
     compile "org.mapstruct:mapstruct-jdk8:${mapstruct_version}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstruct_version}"

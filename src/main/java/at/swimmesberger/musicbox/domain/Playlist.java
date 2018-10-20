@@ -3,18 +3,20 @@ package at.swimmesberger.musicbox.domain;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "dmb_playlist")
 public class Playlist {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
+    @SequenceGenerator(name = "sequenceGenerator")
+    private Long id;
 
     @NotNull
+    @Column(unique=true)
     private String name;
 
+    @Lob
     private String description;
 
     @OneToMany
@@ -22,15 +24,18 @@ public class Playlist {
     (
         name = "dmb_paylist_video",
         joinColumns = {@JoinColumn(name = "playlist_id", referencedColumnName = "id")},
-        inverseJoinColumns = {@JoinColumn(name = "video_id", referencedColumnName = "id")}
+        inverseJoinColumns = {
+            @JoinColumn(name = "video_id", referencedColumnName = "video_id"),
+            @JoinColumn(name = "video_platform", referencedColumnName = "video_platform")
+        }
     )
     private List<Video> videos;
 
-    public UUID getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

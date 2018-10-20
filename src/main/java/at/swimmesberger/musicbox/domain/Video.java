@@ -1,5 +1,7 @@
 package at.swimmesberger.musicbox.domain;
 
+import at.swimmesberger.musicbox.service.dto.VideoPlatform;
+
 import javax.persistence.*;
 import java.io.Serializable;
 
@@ -11,10 +13,14 @@ public class Video implements Serializable {
 
     @EmbeddedId
     private VideoId id;
-    private VideoPlatform platform;
+
     private String title;
+
+    @Lob
     private String description;
+
     private String thumbnailURI;
+
     private String videoURI;
 
     public VideoId getId() {
@@ -58,10 +64,10 @@ public class Video implements Serializable {
     }
 
     public VideoPlatform getPlatform() {
-        return platform;
+        return this.id.getVideoPlatform();
     }
 
     public void setPlatform(VideoPlatform platform) {
-        this.platform = platform;
+        this.id.setVideoPlatform(platform);
     }
 }

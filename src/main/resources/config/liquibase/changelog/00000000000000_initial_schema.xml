@@ -132,4 +132,65 @@
                                  referencedColumnNames="event_id"
                                  referencedTableName="jhi_persistent_audit_event"/>
     </changeSet>
+
+    <!--
+        DemocraticMusicBox core tables.
+    -->
+    <changeSet id="00000000000002" author="swimmesberger">
+        <createTable tableName="dmb_video">
+            <column name="video_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_platform" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(50)"/>
+            <column name="description" type="text"/>
+            <column name="thumbnailURI" type="varchar(50)"/>
+            <column name="videoURI" type="varchar(50)"/>
+        </createTable>
+
+        <createTable tableName="dmb_playlist">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints unique="true" nullable="false" uniqueConstraintName="ux_video_name"/>
+            </column>
+            <column name="description" type="text"/>
+        </createTable>
+
+        <createTable tableName="dmb_paylist_video">
+            <column name="playlist_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_platform" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey columnNames="video_id, video_platform" tableName="dmb_video"/>
+        <addPrimaryKey columnNames="playlist_id, video_id, video_platform" tableName="dmb_paylist_video"/>
+
+        <addForeignKeyConstraint baseColumnNames="playlist_id"
+                                 baseTableName="dmb_paylist_video"
+                                 constraintName="fk_playlist_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="dmb_playlist"/>
+
+        <addForeignKeyConstraint baseColumnNames="video_id"
+                                 baseTableName="dmb_paylist_video"
+                                 constraintName="fk_video_id"
+                                 referencedColumnNames="video_id"
+                                 referencedTableName="dmb_video"/>
+
+        <addForeignKeyConstraint baseColumnNames="video_platform"
+                                 baseTableName="dmb_paylist_video"
+                                 constraintName="fk_video_platform"
+                                 referencedColumnNames="video_platform"
+                                 referencedTableName="dmb_video"/>
+    </changeSet>
 </databaseChangeLog>

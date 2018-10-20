@@ -1,7 +1,11 @@
 package at.swimmesberger.musicbox.domain;
 
+import at.swimmesberger.musicbox.service.dto.VideoPlatform;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -10,6 +14,7 @@ public class VideoId implements Serializable {
     @Column(name = "video_id")
     private String videoId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "video_platform")
     private VideoPlatform videoPlatform;
 
