@@ -1,5 +1,6 @@
 package at.swimmesberger.musicbox.domain;
 
+import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 import at.swimmesberger.musicbox.service.dto.VideoPlatform;
 
 import javax.persistence.Column;
@@ -42,6 +43,10 @@ public class VideoId implements Serializable {
         this.videoPlatform = videoPlatform;
     }
 
+    public VideoIdDTO toDTO(){
+        return new VideoIdDTO(this.getVideoId(), this.getVideoPlatform());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -54,5 +59,12 @@ public class VideoId implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getVideoId(), getVideoPlatform());
+    }
+
+    public static VideoId create(VideoIdDTO dto){
+        final VideoId id = new VideoId();
+        id.setVideoId(dto.getVideoId());
+        id.setVideoPlatform(dto.getVideoPlatform());
+        return id;
     }
 }

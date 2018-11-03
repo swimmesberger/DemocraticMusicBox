@@ -146,8 +146,8 @@
             </column>
             <column name="title" type="varchar(50)"/>
             <column name="description" type="text"/>
-            <column name="thumbnailURI" type="varchar(50)"/>
-            <column name="videoURI" type="varchar(50)"/>
+            <column name="thumbnailURI" type="varchar(255)"/>
+            <column name="videoURI" type="varchar(255)"/>
         </createTable>
 
         <createTable tableName="dmb_playlist">
@@ -160,7 +160,7 @@
             <column name="description" type="text"/>
         </createTable>
 
-        <createTable tableName="dmb_paylist_video">
+        <createTable tableName="dmb_playlist_video">
             <column name="playlist_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
@@ -172,23 +172,67 @@
             </column>
         </createTable>
 
+        <createTable tableName="dmb_video_processing">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="video_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_platform" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="dmb_video_post_processing">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="video_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_platform" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="text"/>
+        </createTable>
+
+        <createIndex indexName="idx_processing_status"
+                     tableName="dmb_video_processing">
+            <column name="status" type="varchar(100)"/>
+        </createIndex>
+
+        <createIndex indexName="idx_post_processing_status"
+                     tableName="dmb_video_post_processing">
+            <column name="status" type="varchar(100)"/>
+        </createIndex>
+
         <addPrimaryKey columnNames="video_id, video_platform" tableName="dmb_video"/>
-        <addPrimaryKey columnNames="playlist_id, video_id, video_platform" tableName="dmb_paylist_video"/>
+        <addPrimaryKey columnNames="playlist_id, video_id, video_platform" tableName="dmb_playlist_video"/>
 
         <addForeignKeyConstraint baseColumnNames="playlist_id"
-                                 baseTableName="dmb_paylist_video"
+                                 baseTableName="dmb_playlist_video"
                                  constraintName="fk_playlist_id"
                                  referencedColumnNames="id"
                                  referencedTableName="dmb_playlist"/>
 
         <addForeignKeyConstraint baseColumnNames="video_id"
-                                 baseTableName="dmb_paylist_video"
+                                 baseTableName="dmb_playlist_video"
                                  constraintName="fk_video_id"
                                  referencedColumnNames="video_id"
                                  referencedTableName="dmb_video"/>
 
         <addForeignKeyConstraint baseColumnNames="video_platform"
-                                 baseTableName="dmb_paylist_video"
+                                 baseTableName="dmb_playlist_video"
                                  constraintName="fk_video_platform"
                                  referencedColumnNames="video_platform"
                                  referencedTableName="dmb_video"/>

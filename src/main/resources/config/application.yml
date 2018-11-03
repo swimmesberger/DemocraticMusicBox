@@ -142,3 +142,10 @@ logging:
 # ===================================================================
 
 # application:
+
+processing:
+    binary:
+        directory: binaries
+    video:
+        directory: videos
+        cache: videos_cache

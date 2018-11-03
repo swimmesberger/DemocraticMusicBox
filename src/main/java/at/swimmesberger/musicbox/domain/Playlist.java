@@ -2,11 +2,14 @@ package at.swimmesberger.musicbox.domain;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
 @Table(name = "dmb_playlist")
-public class Playlist {
+public class Playlist implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
     @SequenceGenerator(name = "sequenceGenerator")
@@ -19,10 +22,10 @@ public class Playlist {
     @Lob
     private String description;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable
     (
-        name = "dmb_paylist_video",
+        name = "dmb_playlist_video",
         joinColumns = {@JoinColumn(name = "playlist_id", referencedColumnName = "id")},
         inverseJoinColumns = {
             @JoinColumn(name = "video_id", referencedColumnName = "video_id"),

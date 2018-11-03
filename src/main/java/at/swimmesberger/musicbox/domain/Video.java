@@ -4,6 +4,7 @@ import at.swimmesberger.musicbox.service.dto.VideoPlatform;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "dmb_video")
@@ -63,11 +64,16 @@ public class Video implements Serializable {
         this.videoURI = videoURI;
     }
 
-    public VideoPlatform getPlatform() {
-        return this.id.getVideoPlatform();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Video video = (Video) o;
+        return Objects.equals(getId(), video.getId());
     }
 
-    public void setPlatform(VideoPlatform platform) {
-        this.id.setVideoPlatform(platform);
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
     }
 }
