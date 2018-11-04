@@ -17,8 +17,9 @@ public class VideoPostProcessingUnit implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Column(nullable = false)
-    private VideoId videoId;
+    @ManyToOne
+    @JoinColumn(name = "processing_unit_id", referencedColumnName = "id", nullable = false)
+    private VideoProcessingUnit processingUnit;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -40,12 +41,12 @@ public class VideoPostProcessingUnit implements Serializable {
         this.id = id;
     }
 
-    public VideoId getVideoId() {
-        return videoId;
+    public void setProcessingUnit(VideoProcessingUnit processingUnit) {
+        this.processingUnit = processingUnit;
     }
 
-    public void setVideoId(VideoId videoId) {
-        this.videoId = videoId;
+    public VideoProcessingUnit getProcessingUnit() {
+        return processingUnit;
     }
 
     public VideoPostProcessingType getType() {

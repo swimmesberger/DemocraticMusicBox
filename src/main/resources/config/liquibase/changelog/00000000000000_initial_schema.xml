@@ -185,16 +185,19 @@
             <column name="status" type="varchar(100)">
                 <constraints nullable="false"/>
             </column>
+            <column name="created_at" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="bigint">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <createTable tableName="dmb_video_post_processing">
             <column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="video_id" type="varchar(100)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="video_platform" type="varchar(50)">
+            <column name="processing_unit_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="varchar(100)">
@@ -236,5 +239,11 @@
                                  constraintName="fk_video_platform"
                                  referencedColumnNames="video_platform"
                                  referencedTableName="dmb_video"/>
+
+        <addForeignKeyConstraint baseColumnNames="processing_unit_id"
+                                 baseTableName="dmb_video_post_processing"
+                                 constraintName="fk_processing_unit_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="dmb_video_processing"/>
     </changeSet>
 </databaseChangeLog>

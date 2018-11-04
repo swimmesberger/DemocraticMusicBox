@@ -1,6 +1,5 @@
 package at.swimmesberger.musicbox.events;
 
-import at.swimmesberger.musicbox.domain.VideoId;
 import at.swimmesberger.musicbox.domain.ProcessingStatus;
 import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 
@@ -20,5 +19,18 @@ public class VideoProcessingErrorEvent extends VideoProcessingEvent {
 
     public int getErrorCode() {
         return errorCode;
+    }
+
+    @Override
+    public String toString() {
+        return "VideoProcessingErrorEvent{" +
+            "errorMsg='" + errorMsg + '\'' +
+            ", errorCode=" + errorCode +
+            ", videoId=" + getVideoId() +
+            ", currentStatus=" + getCurrentStatus() +
+            ", targetStatus=" + getTargetStatus() +
+            ", timestamp=" + getTimestamp() +
+            ", source=" + getSource() +
+            '}';
     }
 }

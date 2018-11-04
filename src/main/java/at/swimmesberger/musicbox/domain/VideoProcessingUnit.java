@@ -20,6 +20,14 @@ public class VideoProcessingUnit implements Serializable {
     @Enumerated(EnumType.STRING)
     private ProcessingStatus status;
 
+    //UTC unix timestamp
+    @Column(name = "created_at", nullable = false)
+    private Long createdAt;
+
+    //UTC unix timestamp
+    @Column(name = "updated_at", nullable = false)
+    private Long updatedAt;
+
     public Long getId() {
         return id;
     }
@@ -28,11 +36,11 @@ public class VideoProcessingUnit implements Serializable {
         this.id = id;
     }
 
-    public VideoId getVideoid() {
+    public VideoId getVideoId() {
         return videoId;
     }
 
-    public void setVideoid(VideoId videoid) {
+    public void setVideoId(VideoId videoid) {
         this.videoId = videoid;
     }
 
@@ -42,5 +50,21 @@ public class VideoProcessingUnit implements Serializable {
 
     public void setStatus(ProcessingStatus status) {
         this.status = status;
+    }
+
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

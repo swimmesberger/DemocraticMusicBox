@@ -14,4 +14,16 @@ public class VideoProcessingProgressEvent extends VideoProcessingEvent {
     public double getProgress() {
         return progress;
     }
+
+    @Override
+    public String toString() {
+        return "VideoProcessingProgressEvent{" +
+            "progress=" + progress +
+            ", videoId=" + getVideoId() +
+            ", currentStatus=" + getCurrentStatus() +
+            ", targetStatus=" + getTargetStatus() +
+            ", timestamp=" + getTimestamp() +
+            ", source=" + getSource() +
+            '}';
+    }
 }

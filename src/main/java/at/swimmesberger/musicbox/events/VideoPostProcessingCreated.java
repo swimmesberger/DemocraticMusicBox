@@ -1,17 +1,26 @@
 package at.swimmesberger.musicbox.events;
 
-import at.swimmesberger.musicbox.domain.VideoPostProcessingUnit;
 import org.springframework.context.ApplicationEvent;
 
 public class VideoPostProcessingCreated extends ApplicationEvent {
-    private final VideoPostProcessingUnit videoPostProcessingUnit;
+    //I don't want any jpa entities in an ApplicationEvent only primitive or immutable json serializable object are allowed
+    private final long videoPostProcessingUnitId;
 
-    public VideoPostProcessingCreated(Object source, VideoPostProcessingUnit videoPostProcessingUnit) {
+    public VideoPostProcessingCreated(Object source, long videoPostProcessingUnitId) {
         super(source);
-        this.videoPostProcessingUnit = videoPostProcessingUnit;
+        this.videoPostProcessingUnitId = videoPostProcessingUnitId;
     }
 
-    public VideoPostProcessingUnit getVideoPostProcessingUnit() {
-        return videoPostProcessingUnit;
+    public long getVideoPostProcessingUnitId() {
+        return videoPostProcessingUnitId;
+    }
+
+    @Override
+    public String toString() {
+        return "VideoPostProcessingCreated{" +
+            "videoPostProcessingUnit=" + this.getVideoPostProcessingUnitId() +
+            ", timestamp=" + getTimestamp() +
+            ", source=" + getSource() +
+            '}';
     }
 }

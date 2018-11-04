@@ -28,4 +28,15 @@ public class VideoProcessingEvent extends ApplicationEvent {
     public ProcessingStatus getTargetStatus() {
         return targetStatus;
     }
+
+    @Override
+    public String toString() {
+        return "VideoProcessingEvent{" +
+            "videoId=" + videoId +
+            ", currentStatus=" + currentStatus +
+            ", targetStatus=" + targetStatus +
+            ", timestamp=" + getTimestamp() +
+            ", source=" + getSource() +
+            '}';
+    }
 }
