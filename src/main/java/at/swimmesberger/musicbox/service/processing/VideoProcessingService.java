@@ -11,8 +11,6 @@ import at.swimmesberger.musicbox.service.VideoIdProcessingService;
 import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 import at.swimmesberger.musicbox.service.dto.VideoReturnDTO;
 import at.swimmesberger.musicbox.service.dto.VideoUnit;
-import at.swimmesberger.musicbox.service.errors.UnsupportedVideoPlatformException;
-import at.swimmesberger.musicbox.service.errors.VideoProcessingException;
 import at.swimmesberger.musicbox.service.errors.VideoServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +18,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -63,7 +61,7 @@ public class VideoProcessingService {
         });
     }
 
-    @TransactionalEventListener(value = VideoProcessingQueuedEvent.class, phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener(value = VideoProcessingQueuedEvent.class)
     public void videoQueuedEvent(VideoProcessingQueuedEvent event) {
         logger.info("Processing video processing queued event {}", event);
         this.transactionTemplate.execute(t -> {
@@ -77,23 +75,59 @@ public class VideoProcessingService {
         });
     }
 
-    @EventListener(VideoProcessingFinishEvent.class)
+    @TransactionalEventListener(VideoProcessingFinishEvent.class)
     protected void videoProcessedEvent(VideoProcessingFinishEvent event) {
-        this.transactionTemplate.execute(t -> {
-            final ProcessedVideo processedVideo = event.getVideo();
-            Video video = new Video();
-            video.setId(VideoId.create(processedVideo.getSource().getId()));
-            video.setTitle(processedVideo.getMetadata().getTitle());
-            video.setDescription(processedVideo.getMetadata().getDescription());
-            video.setVideoURI(processedVideo.getVideoURI().toString());
-            video.setThumbnailURI(processedVideo.getThumbnailURI().toString());
-            video = this.videoRepository.save(video);
-            this.fireVideoCreatedEvent(video, event.getProcessingId());
-            return null;
-        });
+        try {
+            final TransactionTemplate template = new TransactionTemplate(this.transactionTemplate.getTransactionManager(), this.transactionTemplate);
+            template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            template.execute(t -> {
+                final Optional<VideoProcessingUnit> vpuOp = this.processingRepository.findById(event.getProcessingId());
+                if(!vpuOp.isPresent()){
+                    logger.error("VideProcessingUnit with id {} not found!", event.getProcessingId());
+                    return null;
+                }
+
+                final ProcessedVideo processedVideo = event.getVideo();
+                Video video = new Video();
+                video.setId(VideoId.create(processedVideo.getSource().getId()));
+                video.setTitle(processedVideo.getMetadata().getTitle());
+                video.setDescription(processedVideo.getMetadata().getDescription());
+                video.setVideoURI(processedVideo.getVideoURI().toString());
+                video.setThumbnailURI(processedVideo.getThumbnailURI().toString());
+                video = this.videoRepository.save(video);
+
+                VideoProcessingUnit vpu = vpuOp.get();
+                vpu.setStatus(ProcessingStatus.PROCESSED);
+                vpu.setUpdatedAt(Instant.now().toEpochMilli());
+                vpu = this.processingRepository.save(vpu);
+
+                this.fireVideoCreatedEvent(video, vpu.getId());
+                return null;
+            });
+        }catch(DataIntegrityViolationException ex){
+            //check if we added a video which exists already - could be a race condition
+            if(ex.getMessage().contains("FK_VIDEO_PLATFORM_INDEX")){
+                logger.warn("Video processing finish event but video exists already {}", event.getVideo());
+                this.transactionTemplate.execute(t -> {
+                    final Optional<Video> videoById = this.videoRepository.findById(VideoId.create(event.getVideoId()));
+                    if(videoById.isPresent()){
+                        this.fireVideoCreatedEvent(videoById.get(), event.getProcessingId());
+                    }else{
+                        logger.error("Violation exception without a video?!", ex);
+                    }
+                    return null;
+                });
+            }else{
+                throw ex;
+            }
+        }
     }
 
-    public VideoProcessingUnit queueVideo(final VideoIdDTO videoIdDTO) {
+    public void queueVideo(final VideoProcessingUnit unit) {
+        this.fireQueuedEvent(unit);
+    }
+
+    public VideoProcessingUnit createProcesingVideo(final VideoIdDTO videoIdDTO){
         final long time = Instant.now().toEpochMilli();
         VideoProcessingUnit unit = new VideoProcessingUnit();
         unit.setCreatedAt(time);
@@ -101,23 +135,41 @@ public class VideoProcessingService {
         unit.setStatus(ProcessingStatus.PEDNING);
         unit.setVideoId(VideoId.create(videoIdDTO));
         unit = this.processingRepository.save(unit);
-        this.fireQueuedEvent(unit);
         return unit;
+    }
+
+    public VideoReturnDTO createReturnVideo(VideoProcessingUnit unit){
+        final Map<VideoIdDTO, List<VideoReturnDTO>> processedVideosMap = this.getProcessedVideosMap(Collections.singletonList(unit));
+        final List<VideoReturnDTO> returnVideos = processedVideosMap.get(unit.getVideoId().toDTO());
+        if(returnVideos.size() <= 0)return null;
+        return returnVideos.get(0);
     }
 
     public Optional<VideoProcessingUnit> getProcessingUnit(long id){
         return this.processingRepository.findById(id);
     }
 
-    public List<VideoReturnDTO> getAllProcessedVideos(){
+    public Map<VideoIdDTO, List<VideoReturnDTO>> getProcessedVideos(){
         final List<VideoProcessingUnit> processingUnits = this.processingRepository.findAllByOrderByCreatedAtAsc();
-        return this.convertToVideoReturnDTO(processingUnits);
+        return this.getProcessedVideosMap(processingUnits);
     }
 
-    public List<VideoReturnDTO> getProcessedVideos(VideoIdDTO id){
-        final VideoId baseId = VideoId.create(id);
-        final List<VideoProcessingUnit> processingUnits = this.processingRepository.findAllByVideoIdOrderByCreatedAtAsc(baseId);
-        return this.convertToVideoReturnDTO(processingUnits);
+    public Map<VideoIdDTO, List<VideoReturnDTO>> getProcessedVideos(List<VideoIdDTO> ids){
+        final List<VideoId> baseIds = VideoId.create(ids);
+        final List<VideoProcessingUnit> processingUnits = this.processingRepository.findAllByVideoIdInOrderByCreatedAtAsc(baseIds);
+        return this.getProcessedVideosMap(processingUnits);
+    }
+
+    private Map<VideoIdDTO, List<VideoReturnDTO>> getProcessedVideosMap(List<VideoProcessingUnit> processingUnits){
+        final List<VideoReturnDTO> videos = this.convertToVideoReturnDTO(processingUnits);
+        final Map<VideoIdDTO, List<VideoReturnDTO>> mappedVideos = new HashMap<>(videos.size());
+        for(final VideoReturnDTO video : videos){
+            if(!mappedVideos.containsKey(video.getId())){
+                mappedVideos.put(video.getId(), new ArrayList<>());
+            }
+            mappedVideos.get(video.getId()).add(video);
+        }
+        return mappedVideos;
     }
 
     private List<VideoReturnDTO> convertToVideoReturnDTO(List<VideoProcessingUnit> processingUnits){
@@ -149,9 +201,6 @@ public class VideoProcessingService {
             final ProcessedVideo processedVideo = this.dlDriver.downloadVideo(videoUnit, progress -> {
                 this.fireProgressEvent(videoIdDTO, progress);
             });
-            vpu.setStatus(ProcessingStatus.PROCESSED);
-            vpu.setUpdatedAt(Instant.now().toEpochMilli());
-            vpu = this.processingRepository.save(vpu);
             this.fireFinishEvent(processedVideo, vpu);
         } catch (VideoServiceException ex) {
             logger.error(ex.getMessage(), ex);

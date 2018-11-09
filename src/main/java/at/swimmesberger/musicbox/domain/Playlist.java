@@ -22,7 +22,7 @@ public class Playlist implements Serializable {
     @Lob
     private String description;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable
     (
         name = "dmb_playlist_video",

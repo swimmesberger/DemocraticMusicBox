@@ -139,10 +139,10 @@
     <changeSet id="00000000000002" author="swimmesberger">
         <createTable tableName="dmb_video">
             <column name="video_id" type="varchar(100)">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="false"/>
             </column>
             <column name="video_platform" type="varchar(50)">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="false"/>
             </column>
             <column name="title" type="varchar(50)"/>
             <column name="description" type="text"/>
@@ -228,16 +228,10 @@
                                  referencedColumnNames="id"
                                  referencedTableName="dmb_playlist"/>
 
-        <addForeignKeyConstraint baseColumnNames="video_id"
+        <addForeignKeyConstraint baseColumnNames="video_id, video_platform"
                                  baseTableName="dmb_playlist_video"
-                                 constraintName="fk_video_id"
-                                 referencedColumnNames="video_id"
-                                 referencedTableName="dmb_video"/>
-
-        <addForeignKeyConstraint baseColumnNames="video_platform"
-                                 baseTableName="dmb_playlist_video"
-                                 constraintName="fk_video_platform"
-                                 referencedColumnNames="video_platform"
+                                 constraintName="fk_video_id_video_platform"
+                                 referencedColumnNames="video_id, video_platform"
                                  referencedTableName="dmb_video"/>
 
         <addForeignKeyConstraint baseColumnNames="processing_unit_id"

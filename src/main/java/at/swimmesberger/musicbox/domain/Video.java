@@ -1,9 +1,13 @@
 package at.swimmesberger.musicbox.domain;
 
+import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 import at.swimmesberger.musicbox.service.dto.VideoPlatform;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -75,5 +79,13 @@ public class Video implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getId());
+    }
+
+    public static List<VideoIdDTO> toVideoIdDTO(Collection<Video> videos){
+        final List<VideoIdDTO> dtos = new ArrayList<>(videos.size());
+        for(final Video video : videos){
+            dtos.add(video.getId().toDTO());
+        }
+        return dtos;
     }
 }

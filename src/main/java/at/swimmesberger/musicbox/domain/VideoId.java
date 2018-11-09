@@ -8,6 +8,9 @@ import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 @Embeddable
@@ -66,5 +69,21 @@ public class VideoId implements Serializable {
         id.setVideoId(dto.getVideoId());
         id.setVideoPlatform(dto.getVideoPlatform());
         return id;
+    }
+
+    public static List<VideoId> create(Collection<VideoIdDTO> dtos){
+        final List<VideoId> ids = new ArrayList<>(dtos.size());
+        for(final VideoIdDTO dto : dtos){
+            ids.add(create(dto));
+        }
+        return ids;
+    }
+
+    public static List<VideoIdDTO> toDTO(Collection<VideoId> ids){
+        final List<VideoIdDTO> dtos = new ArrayList<>(ids.size());
+        for(final VideoId id : ids){
+            dtos.add(id.toDTO());
+        }
+        return dtos;
     }
 }

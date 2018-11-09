@@ -2,9 +2,7 @@ package at.swimmesberger.musicbox.web.rest.video;
 
 import at.swimmesberger.musicbox.domain.Playlist;
 import at.swimmesberger.musicbox.service.VideoService;
-import at.swimmesberger.musicbox.service.dto.PlaylistDTO;
-import at.swimmesberger.musicbox.service.dto.VideoToPlaylistDTO;
-import at.swimmesberger.musicbox.service.dto.VideoToPlaylistResultDTO;
+import at.swimmesberger.musicbox.service.dto.*;
 import at.swimmesberger.musicbox.service.errors.PlaylistDuplicateExcption;
 import at.swimmesberger.musicbox.service.errors.VideoDuplicateExeption;
 import at.swimmesberger.musicbox.service.errors.VideoServiceException;
@@ -19,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -34,16 +33,15 @@ public class PlaylistResource {
 
     @GetMapping("/playlists")
     @Timed
-    public ResponseEntity<List<Playlist>> getAllPlaylists(Pageable pageable) {
-        final Page<Playlist> page = this.videoService.getAllPlaylists(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/playlists");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    public ResponseEntity<List<PlaylistDTO>> getAllPlaylists(UriComponentsBuilder requestUri) {
+        final List<PlaylistDTO> playlists = this.videoService.getAllPlaylists(URIRepresentationDTO.createExternal(requestUri));
+        return new ResponseEntity<>(playlists, HttpStatus.OK);
     }
 
     @PostMapping("/playlists")
     @Timed
-    public ResponseEntity<Playlist> createPlaylist(@RequestBody PlaylistDTO playlistDTO) throws PlaylistDuplicateExcption {
-        final Playlist playlist;
+    public ResponseEntity<PlaylistDTO> createPlaylist(@RequestBody CreatePlaylistDTO playlistDTO) throws PlaylistDuplicateExcption {
+        final PlaylistDTO playlist;
         try {
             playlist = this.videoService.createPlaylist(playlistDTO);
         } catch (DataIntegrityViolationException dae) {
@@ -55,10 +53,10 @@ public class PlaylistResource {
 
     @PostMapping("/playlists/{playlistId}")
     @Timed
-    public ResponseEntity<VideoToPlaylistResultDTO> addVideoToPlaylist(@PathVariable(value = "playlistId") long playlistId, @RequestBody VideoToPlaylistDTO vToPlaylist) throws VideoServiceException {
+    public ResponseEntity<PlaylistDTO> addVideoToPlaylist(@PathVariable(value = "playlistId") long playlistId, @RequestBody VideoToPlaylistDTO vToPlaylist, UriComponentsBuilder requestUri) throws VideoServiceException {
         final VideoToPlaylistDTO videoToPlaylistDTO = new VideoToPlaylistDTO(playlistId, vToPlaylist.getVideoURI());
         try {
-            return new ResponseEntity<>(this.videoService.addVideoToPlayList(videoToPlaylistDTO), HttpStatus.OK);
+            return new ResponseEntity<>(this.videoService.addVideoToPlayList(videoToPlaylistDTO, URIRepresentationDTO.createExternal(requestUri)), HttpStatus.OK);
         }catch(DataIntegrityViolationException ex){
             logger.error(ex.getMessage(), ex);
             throw new VideoDuplicateExeption("This playlist '" + playlistId + "' contains a video with the url '" + videoToPlaylistDTO.getVideoURI() + "' already.");

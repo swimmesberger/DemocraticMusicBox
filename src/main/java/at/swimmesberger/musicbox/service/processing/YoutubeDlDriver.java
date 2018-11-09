@@ -54,6 +54,11 @@ public class YoutubeDlDriver {
     }
 
     public ProcessedVideo downloadVideo(VideoUnit unit, DoubleConsumer progress) throws VideoProcessingException {
+        final ProcessedVideo cachedVideo = this.getVideo(unit);
+        if(cachedVideo != null){
+            return cachedVideo;
+        }
+
         final String binary;
         if(this.binaryDirectory.isPresent()){
             binary = this.binaryDirectory.get().resolve("youtube-dl").toString();
@@ -63,6 +68,7 @@ public class YoutubeDlDriver {
 
         final String videoIdString = unit.getIdString();
         final String url = unit.getUri().toString();
+
         final String videosPath = this.videoDirectory.resolve(videoIdString + "." + "%(ext)s").toString();
         final String cachePath = this.cacheDirectory.toString();
         final ProcessExecutor pExec = new ProcessExecutor().command(binary, "--write-info-json", "--newline", "--cache-dir", cachePath,

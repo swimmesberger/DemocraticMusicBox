@@ -21,7 +21,7 @@ public class VideoIdProcessingService {
 
     public URI constructURI(VideoIdDTO videoId) throws UnsupportedVideoPlatformException {
         if (videoId.getVideoPlatform() == VideoPlatform.YOUTUBE) {
-            return UriComponentsBuilder.newInstance().scheme("https").host("youtube.com").queryParam("v", videoId.getVideoId()).build().toUri();
+            return UriComponentsBuilder.newInstance().scheme("https").host("youtube.com").path("watch").queryParam("v", videoId.getVideoId()).build().toUri();
         } else {
             throw VideoErrors.newUnsupprotedVideoPlatform(videoId.getVideoPlatform());
         }

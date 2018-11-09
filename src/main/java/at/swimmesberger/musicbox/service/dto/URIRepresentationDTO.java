@@ -1,6 +1,7 @@
 package at.swimmesberger.musicbox.service.dto;
 
 import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 
 public class URIRepresentationDTO {
@@ -26,5 +27,9 @@ public class URIRepresentationDTO {
 
     public static URIRepresentationDTO createExternal(UriComponents base){
         return new URIRepresentationDTO(base, URIRepresentationType.EXTERNAL);
+    }
+
+    public static URIRepresentationDTO createExternal(UriComponentsBuilder base){
+        return createExternal(base.build());
     }
 }
