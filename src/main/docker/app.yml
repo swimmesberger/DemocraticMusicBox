@@ -19,7 +19,3 @@ services:
         extends:
             file: postgresql.yml
             service: democraticmusicbox-postgresql
-    keycloak:
-        extends:
-            file: keycloak.yml
-            service: keycloak

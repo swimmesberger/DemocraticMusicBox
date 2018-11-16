@@ -22,6 +22,10 @@ public class VideoReturnDTO {
         this.metadata = metadata;
     }
 
+    public VideoReturnDTO(VideoReturnDTO dto){
+        this(dto.getId(), dto.getIdString(), dto.getProcessingId(), dto.getProcessingTime(), dto.getStatus(), dto.getMetadata());
+    }
+
     @JsonProperty("id")
     public VideoIdDTO getId() {
         return id;

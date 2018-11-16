@@ -68,6 +68,10 @@ public class VideoMetadata {
         return ext;
     }
 
+    public VideoMetadata withExt(String ext) {
+        return new VideoMetadata(this.getId(), this.getTitle(), this.getDescription(), this.getDuration(), this.getWidth(), this.getHeight(), this.getTags(), this.getUploadDate(), ext);
+    }
+
     @Override
     public String toString() {
         return "VideoMetadata{" +

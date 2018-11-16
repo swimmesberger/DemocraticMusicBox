@@ -39,6 +39,7 @@ public class CacheConfiguration {
             cm.createCache(at.swimmesberger.musicbox.domain.Authority.class.getName(), jcacheConfiguration);
             cm.createCache(at.swimmesberger.musicbox.domain.User.class.getName() + ".authorities", jcacheConfiguration);
             // jhipster-needle-ehcache-add-entry
+            cm.createCache(at.swimmesberger.musicbox.repository.UserRepository.USERS_BY_SOCIAL_ID_CACHE, jcacheConfiguration);
         };
     }
 }

@@ -22,17 +22,8 @@ public class Playlist implements Serializable {
     @Lob
     private String description;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable
-    (
-        name = "dmb_playlist_video",
-        joinColumns = {@JoinColumn(name = "playlist_id", referencedColumnName = "id")},
-        inverseJoinColumns = {
-            @JoinColumn(name = "video_id", referencedColumnName = "video_id"),
-            @JoinColumn(name = "video_platform", referencedColumnName = "video_platform")
-        }
-    )
-    private List<Video> videos;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "playlist")
+    private List<VideoPlaylistEntry> videos;
 
     public Long getId() {
         return id;
@@ -58,11 +49,11 @@ public class Playlist implements Serializable {
         this.description = description;
     }
 
-    public List<Video> getVideos() {
+    public List<VideoPlaylistEntry> getVideos() {
         return videos;
     }
 
-    public void setVideos(List<Video> videos) {
+    public void setVideos(List<VideoPlaylistEntry> videos) {
         this.videos = videos;
     }
 }

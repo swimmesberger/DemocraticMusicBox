@@ -10,10 +10,10 @@ public class PlaylistDTO {
     private final long id;
     private final String name;
     private final String description;
-    private final List<VideoReturnDTO> videos;
+    private final List<VideoPlaylistEntryDTO> videos;
 
     @JsonCreator
-    public PlaylistDTO(@JsonProperty("id") long id, @JsonProperty("name") String name, @JsonProperty("description") String description, @JsonProperty("videos") List<VideoReturnDTO> videos) {
+    public PlaylistDTO(@JsonProperty("id") long id, @JsonProperty("name") String name, @JsonProperty("description") String description, @JsonProperty("videos") List<VideoPlaylistEntryDTO> videos) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -32,12 +32,12 @@ public class PlaylistDTO {
         return description;
     }
 
-    public List<VideoReturnDTO> getVideos() {
+    public List<VideoPlaylistEntryDTO> getVideos() {
         return videos;
     }
 
-    public PlaylistDTO addVideo(VideoReturnDTO video){
-        final List<VideoReturnDTO> videos = new ArrayList<>(this.videos);
+    public PlaylistDTO addVideo(VideoPlaylistEntryDTO video){
+        final List<VideoPlaylistEntryDTO> videos = new ArrayList<>(this.videos);
         videos.add(video);
         return new PlaylistDTO(this.getId(), this.getName(), this.getDescription(), videos);
     }

@@ -4,6 +4,7 @@ import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 import at.swimmesberger.musicbox.service.dto.VideoPlatform;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,8 @@ public class Video implements Serializable {
     @EmbeddedId
     private VideoId id;
 
+    @Size(max = 255)
+    @Column(length = 255)
     private String title;
 
     @Lob

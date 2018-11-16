@@ -67,7 +67,6 @@ public class UserServiceIntTest {
     public void init() {
         user = new User();
         user.setLogin("johndoe");
-        user.setActivated(true);
         user.setEmail("johndoe@localhost");
         user.setFirstName("john");
         user.setLastName("doe");

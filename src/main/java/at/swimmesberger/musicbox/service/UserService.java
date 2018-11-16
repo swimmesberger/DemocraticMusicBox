@@ -2,6 +2,7 @@ package at.swimmesberger.musicbox.service;
 
 import at.swimmesberger.musicbox.config.Constants;
 import at.swimmesberger.musicbox.domain.Authority;
+import at.swimmesberger.musicbox.domain.DefaultAuthorities;
 import at.swimmesberger.musicbox.domain.User;
 import at.swimmesberger.musicbox.repository.AuthorityRepository;
 import at.swimmesberger.musicbox.repository.UserRepository;
@@ -89,7 +90,6 @@ public class UserService {
                 user.setLastName(userDTO.getLastName());
                 user.setEmail(userDTO.getEmail().toLowerCase());
                 user.setImageUrl(userDTO.getImageUrl());
-                user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
@@ -150,23 +150,35 @@ public class UserService {
     @SuppressWarnings("unchecked")
     public UserDTO getUserFromAuthentication(OAuth2Authentication authentication) {
         Object oauth2AuthenticationDetails = authentication.getDetails(); // should be an OAuth2AuthenticationDetails
-        Map<String, Object> details = (Map<String, Object>) authentication.getUserAuthentication().getDetails();
+        final Map<String, Object> details = (Map<String, Object>) authentication.getUserAuthentication().getDetails();
         User user = getUser(details);
-        Set<Authority> userAuthorities = extractAuthorities(authentication, details);
-        user.setAuthorities(userAuthorities);
-
+        final Optional<User> savedUser = this.userRepository.findOneWithAuthoritiesBySocialId(user.getSocialId());
+        if(!savedUser.isPresent()){
+            final long userCount = this.userRepository.count();
+            if(userCount <= 1){
+                //if only the system user exists we make the user which logins first to an administrator
+                user.getAuthorities().addAll(this.getAdministratorAuthorities());
+            }
+            user = this.userRepository.save(user);
+        }else{
+            user = savedUser.get();
+        }
         // convert Authorities to GrantedAuthorities
-        Set<GrantedAuthority> grantedAuthorities = userAuthorities.stream()
+        final Set<GrantedAuthority> grantedAuthorities = user.getAuthorities().stream()
             .map(Authority::getName)
             .map(SimpleGrantedAuthority::new)
             .collect(Collectors.toSet());
 
-        UsernamePasswordAuthenticationToken token = getToken(details, user, grantedAuthorities);
+        final UsernamePasswordAuthenticationToken token = getToken(details, user, grantedAuthorities);
         authentication = new OAuth2Authentication(authentication.getOAuth2Request(), token);
         authentication.setDetails(oauth2AuthenticationDetails); // must be present in a gateway for TokenRelayFilter to work
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         return new UserDTO(syncUserWithIdP(details, user));
+    }
+
+    private List<Authority> getAdministratorAuthorities(){
+        return this.authorityRepository.findAllById(Arrays.asList(DefaultAuthorities.ROLE_USER.name(), DefaultAuthorities.ROLE_ADMIN.name()));
     }
 
     private User syncUserWithIdP(Map<String, Object> details, User user) {
@@ -220,36 +232,16 @@ public class UserService {
         return token;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Set<Authority> extractAuthorities(OAuth2Authentication authentication, Map<String, Object> details) {
-        Set<Authority> userAuthorities;
-        // get roles from details
-        if (details.get("roles") != null) {
-            userAuthorities = extractAuthorities((List<String>) details.get("roles"));
-            // if roles don't exist, try groups
-        } else if (details.get("groups") != null) {
-            userAuthorities = extractAuthorities((List<String>) details.get("groups"));
-        } else {
-            userAuthorities = authoritiesFromStringStream(
-                authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-            );
-        }
-        return userAuthorities;
-    }
-
     private static User getUser(Map<String, Object> details) {
         User user = new User();
-        user.setId((String) details.get("sub"));
-        user.setLogin(((String) details.get("preferred_username")).toLowerCase());
+        user.setId((String) details.get("id"));
+        user.setSocialId((String)details.get("id"));
+        user.setLogin(((String) details.get("email")));
         if (details.get("given_name") != null) {
             user.setFirstName((String) details.get("given_name"));
         }
         if (details.get("family_name") != null) {
             user.setLastName((String) details.get("family_name"));
-        }
-        if (details.get("email_verified") != null) {
-            user.setActivated((Boolean) details.get("email_verified"));
         }
         if (details.get("email") != null) {
             user.setEmail(((String) details.get("email")).toLowerCase());
@@ -269,7 +261,8 @@ public class UserService {
         if (details.get("picture") != null) {
             user.setImageUrl((String) details.get("picture"));
         }
-        user.setActivated(true);
+        user.setAuthorities(new HashSet<>());
+        user.setCreatedBy("system");
         return user;
     }
 
@@ -291,5 +284,6 @@ public class UserService {
     private void clearUserCaches(User user) {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_SOCIAL_ID_CACHE)).evict(user.getSocialId());
     }
 }

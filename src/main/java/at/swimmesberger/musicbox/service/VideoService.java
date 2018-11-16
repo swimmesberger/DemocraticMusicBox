@@ -4,6 +4,7 @@ import at.swimmesberger.musicbox.domain.*;
 import at.swimmesberger.musicbox.events.VideoCreatedEvent;
 import at.swimmesberger.musicbox.events.VideoPostProcessingCreated;
 import at.swimmesberger.musicbox.repository.PlaylistRepository;
+import at.swimmesberger.musicbox.repository.VideoPlaylistEntryRepository;
 import at.swimmesberger.musicbox.repository.VideoPostProcessingRepository;
 import at.swimmesberger.musicbox.repository.VideoRepository;
 import at.swimmesberger.musicbox.service.dto.*;
@@ -38,6 +39,7 @@ public class VideoService {
     private final VideoPostProcessingRepository postProcessingRepository;
     private final VideoRepository videoRepository;
     private final PlaylistRepository playlistRepository;
+    private final VideoPlaylistEntryRepository playlistEntryRepository;
     private final VideoIdProcessingService idProcessingService;
     private final VideoProcessingService processingService;
     private final TransactionTemplate transactionTemplate;
@@ -45,11 +47,12 @@ public class VideoService {
     private final ObjectMapper json;
 
     public VideoService(VideoPostProcessingRepository postProcessingRepository, VideoRepository videoRepository, PlaylistRepository playlistRepository,
-                        VideoIdProcessingService idProcessingService, VideoProcessingService processingService, TransactionTemplate transactionTemplate,
-                        ApplicationEventPublisher eventPublisher, ObjectMapper json) {
+                        VideoPlaylistEntryRepository playlistEntryRepository, VideoIdProcessingService idProcessingService, VideoProcessingService processingService,
+                        TransactionTemplate transactionTemplate, ApplicationEventPublisher eventPublisher, ObjectMapper json) {
         this.postProcessingRepository = postProcessingRepository;
         this.videoRepository = videoRepository;
         this.playlistRepository = playlistRepository;
+        this.playlistEntryRepository = playlistEntryRepository;
         this.idProcessingService = idProcessingService;
         this.processingService = processingService;
         this.transactionTemplate = transactionTemplate;
@@ -149,16 +152,17 @@ public class VideoService {
                 final VideoReturnDTO videoReturnDTO = this.processingService.createReturnVideo(vpu);
                 final Map<VideoIdDTO, List<VideoReturnDTO>> processedMap = ImmutableMap.of(videoId, Collections.singletonList(videoReturnDTO));
                 final Map<VideoIdDTO, VideoReturnDTO> returnVideos = this.getVideos(processedMap, Collections.emptyList(), rep);
-                return playlistDTO.addVideo(returnVideos.get(videoId));
+                final VideoReturnDTO procVideoReturnDTO = returnVideos.get(videoId);
+                return playlistDTO.addVideo(new VideoPlaylistEntryDTO(procVideoReturnDTO, null));
             } else {
-                final Playlist changedPlaylist = this.addVideoToPlaylist(video.get(), playlist.get());
-                return this.playlistToDTO(changedPlaylist, rep);
+                final VideoPlaylistEntry playlistEntry = this.addVideoToPlaylist(video.get(), playlist.get());
+                return this.playlistToDTO(playlistEntry.getPlaylist(), rep);
             }
         });
-        for(final VideoProcessingUnit vpu : vpus){
+        for (final VideoProcessingUnit vpu : vpus) {
             this.processingService.queueVideo(vpu);
         }
-        for(final VideoPostProcessingUnit vppu : vppus){
+        for (final VideoPostProcessingUnit vppu : vppus) {
             this.queuePostProcessing(vppu);
         }
         return returnPlaylist;
@@ -168,7 +172,7 @@ public class VideoService {
         return this.idProcessingService.createVideoIdFromIdString(idString);
     }
 
-    private PlaylistDTO playlistToDTO(Playlist playlist, URIRepresentationDTO rep){
+    private PlaylistDTO playlistToDTO(Playlist playlist, URIRepresentationDTO rep) {
         return new PlaylistDTO(playlist.getId(), playlist.getName(), playlist.getDescription(), this.getVideos(playlist, rep));
     }
 
@@ -202,14 +206,25 @@ public class VideoService {
         return returnDTOMap;
     }
 
-    private List<VideoReturnDTO> getVideos(Playlist playlist, URIRepresentationDTO rep) {
-        final List<Video> videoEntities = playlist.getVideos();
-        if(videoEntities.size() <= 0){
+    private List<VideoPlaylistEntryDTO> getVideos(Playlist playlist, URIRepresentationDTO rep) {
+        final List<VideoPlaylistEntry> playlistEntities = playlist.getVideos();
+        if (playlistEntities.size() <= 0) {
             return Collections.emptyList();
+        }
+        final Map<VideoIdDTO, VideoPlaylistEntry> playlistEntryMap = new HashMap<>(playlistEntities.size());
+        final List<Video> videoEntities = new ArrayList<>(playlistEntities.size());
+        for(final VideoPlaylistEntry videoEntry : playlistEntities){
+            videoEntities.add(videoEntry.getVideo());
+            playlistEntryMap.put(videoEntry.getVideo().getId().toDTO(), videoEntry);
         }
         final List<VideoIdDTO> dtoIds = Video.toVideoIdDTO(videoEntities);
         final Map<VideoIdDTO, List<VideoReturnDTO>> processedVideos = this.processingService.getProcessedVideos(dtoIds);
-        return new ArrayList<>(this.getVideos(processedVideos, videoEntities, rep).values());
+        final Collection<VideoReturnDTO> videoReturnDTOS = this.getVideos(processedVideos, videoEntities, rep).values();
+        final List<VideoPlaylistEntryDTO> playlistEntryDTOS = new ArrayList<>(videoReturnDTOS.size());
+        for(final VideoReturnDTO d : videoReturnDTOS){
+            playlistEntryDTOS.add(new VideoPlaylistEntryDTO(d, playlistEntryMap.get(d.getId()).getId()));
+        }
+        return playlistEntryDTOS;
     }
 
     private URI translateURI(URI uri, URIRepresentationDTO rep) {
@@ -232,15 +247,26 @@ public class VideoService {
         final VideoIdDTO idDTO = video.getId().toDTO();
         final URI videoURI = this.translateURI(URI.create(video.getVideoURI()), rep);
         final URI thumbnailURI = this.translateURI(URI.create(video.getThumbnailURI()), rep);
-        return new VideoReturnDTO(idDTO, this.idProcessingService.createIdStringFromVideoId(idDTO), previous == null ? null : previous.getProcessingId(), previous == null ? null : previous.getProcessingTime(), ProcessingStatus.PROCESSED,
-            new VideoMetadataDTO(video.getTitle(), video.getDescription(), videoURI, thumbnailURI));
+        return new VideoReturnDTO(idDTO,
+            this.idProcessingService.createIdStringFromVideoId(idDTO),
+            previous == null ? null : previous.getProcessingId(),
+            previous == null ? null : previous.getProcessingTime(),
+            ProcessingStatus.PROCESSED,
+            new VideoMetadataDTO(video.getTitle(), video.getDescription(), videoURI, thumbnailURI)
+        );
     }
 
     private VideoReturnDTO createVideoReturnDTO(VideoReturnDTO video, VideoReturnDTO previous) {
-        return new VideoReturnDTO(video.getId(), video.getIdString(), previous == null ? null : previous.getProcessingId(), previous == null ? null : previous.getProcessingTime(), ProcessingStatus.PROCESSED, video.getMetadata());
+        return new VideoReturnDTO(video.getId(),
+            video.getIdString(),
+            previous == null ? null : previous.getProcessingId(),
+            previous == null ? null : previous.getProcessingTime(),
+            ProcessingStatus.PROCESSED,
+            video.getMetadata()
+        );
     }
 
-    private void queuePostProcessing(VideoPostProcessingUnit vppu){
+    private void queuePostProcessing(VideoPostProcessingUnit vppu) {
         this.eventPublisher.publishEvent(new VideoPostProcessingCreated(this, vppu.getId()));
     }
 
@@ -262,9 +288,11 @@ public class VideoService {
         return this.createPostProcessing(vpu, VideoPostProcessingType.VIDEO_TO_PLAYLIST, new PlaylistPostProcessDTO(playlistID));
     }
 
-    private Playlist addVideoToPlaylist(Video video, Playlist playlist) {
-        playlist.getVideos().add(video);
-        return this.playlistRepository.save(playlist);
+    private VideoPlaylistEntry addVideoToPlaylist(Video video, Playlist playlist) {
+        final VideoPlaylistEntry playlistEntry = new VideoPlaylistEntry();
+        playlistEntry.setPlaylist(playlist);
+        playlistEntry.setVideo(video);
+        return this.playlistEntryRepository.save(playlistEntry);
     }
 
     private void processPostProcessing(Collection<VideoPostProcessingUnit> vppus) {
@@ -274,7 +302,7 @@ public class VideoService {
                 continue;
             }
             if (vppu.getType() == VideoPostProcessingType.VIDEO_TO_PLAYLIST) {
-                if(this.addVideoToPlaylist(vppu)) {
+                if (this.addVideoToPlaylist(vppu)) {
                     vppu.setStatus(ProcessingStatus.PROCESSED);
                     this.postProcessingRepository.save(vppu);
                 }

@@ -1,6 +1,5 @@
 package at.swimmesberger.musicbox.service.processing;
 
-import at.swimmesberger.musicbox.service.dto.VideoIdDTO;
 import at.swimmesberger.musicbox.service.dto.VideoUnit;
 import at.swimmesberger.musicbox.service.errors.VideoProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,12 +10,12 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
-import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,31 +37,55 @@ public class YoutubeDlDriver {
 
     public ProcessedVideo getVideo(VideoUnit unit) throws VideoProcessingException {
         final String videoIdString = unit.getIdString();
-
-        final Path metaPath = this.videoDirectory.resolve(videoIdString + ".info.json");
-        final Path thumbPath = this.videoDirectory.resolve(videoIdString + ".jpg");
         try {
-            final VideoMetadata metadata;
-            try (final Reader reader = Files.newBufferedReader(metaPath)) {
-                metadata = this.json.readValue(reader, VideoMetadata.class);
+            final Path extMetaPath = this.videoDirectory.resolve(videoIdString + ".ext.info.json");
+            final Path metaPath = this.videoDirectory.resolve(videoIdString + ".info.json");
+            VideoMetadata metadata;
+            if (Files.exists(extMetaPath)) {
+                try (final Reader reader = Files.newBufferedReader(extMetaPath)) {
+                    metadata = this.json.readValue(reader, VideoMetadata.class);
+                }
+            }else{
+                if (!Files.exists(metaPath)) {
+                    logger.info("No metadata file found at {}", metaPath);
+                    return null;
+                }
+                logger.info("No metadata override file found at {}", extMetaPath);
+                try (final Reader reader = Files.newBufferedReader(metaPath)) {
+                    metadata = this.json.readValue(reader, VideoMetadata.class);
+                }
             }
-            final Path videoPath = this.videoDirectory.resolve(videoIdString + "." + metadata.getExt());
+            final Path thumbPath = this.videoDirectory.resolve(videoIdString + ".jpg");
+            Path videoPath = this.getVideoFile(videoIdString, metadata);
+            if (!Files.exists(videoPath)) {
+                logger.info("{} video not found like specified in metadata file trying different file extension (can happen when file is muxed)", videoPath);
+                metadata = metadata.withExt("mkv");
+                videoPath = this.videoDirectory.resolve(videoIdString + "." + "mkv");
+                if (Files.exists(videoPath)) {
+                    logger.info("Writing metadata override file to {}", extMetaPath);
+                    try(final Writer writer = Files.newBufferedWriter(extMetaPath)){
+                        this.json.writeValue(writer, metadata);
+                    }
+                }else{
+                    throw new VideoProcessingException("No video file found");
+                }
+            }
             return new ProcessedVideo(unit, videoPath.toUri(), thumbPath.toUri(), metadata);
-        }catch (IOException ioEx){
+        } catch (IOException ioEx) {
             throw new VideoProcessingException(ioEx);
         }
     }
 
     public ProcessedVideo downloadVideo(VideoUnit unit, DoubleConsumer progress) throws VideoProcessingException {
         final ProcessedVideo cachedVideo = this.getVideo(unit);
-        if(cachedVideo != null){
+        if (cachedVideo != null) {
             return cachedVideo;
         }
 
         final String binary;
-        if(this.binaryDirectory.isPresent()){
+        if (this.binaryDirectory.isPresent()) {
             binary = this.binaryDirectory.get().resolve("youtube-dl").toString();
-        }else{
+        } else {
             binary = "youtube-dl";
         }
 
@@ -86,7 +109,7 @@ public class YoutubeDlDriver {
         try {
             final int exitValue = pExec.executeNoTimeout().getExitValue();
             progress.accept(100);
-            if(exitValue != 0){
+            if (exitValue != 0) {
                 throw new VideoProcessingException("Error exit: " + exitValue);
             }
             return this.getVideo(unit);
@@ -103,5 +126,10 @@ public class YoutubeDlDriver {
 
     public Path getCacheDirectory() {
         return cacheDirectory;
+    }
+
+
+    private Path getVideoFile(String videoIdString, VideoMetadata metadata){
+        return this.videoDirectory.resolve(videoIdString + "." + metadata.getExt());
     }
 }
