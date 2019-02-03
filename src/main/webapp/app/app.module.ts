@@ -1,11 +1,11 @@
 import './vendor.ts';
 
-import { NgModule, Injector } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgbDatepickerConfig } from '@ng-bootstrap/ng-bootstrap';
 import { Ng2Webstorage } from 'ngx-webstorage';
-import { JhiEventManager } from 'ng-jhipster';
+import { NgJhipsterModule } from 'ng-jhipster';
 
 import { AuthExpiredInterceptor } from './blocks/interceptor/auth-expired.interceptor';
 import { ErrorHandlerInterceptor } from './blocks/interceptor/errorhandler.interceptor';
@@ -15,7 +15,6 @@ import { DemocraticMusicBoxCoreModule } from 'app/core';
 import { DemocraticMusicBoxAppRoutingModule } from './app-routing.module';
 import { DemocraticMusicBoxHomeModule } from './home/home.module';
 import { DemocraticMusicBoxEntityModule } from './entities/entity.module';
-import { StateStorageService } from 'app/core/auth/state-storage.service';
 import * as moment from 'moment';
 // jhipster-needle-angular-add-module-import JHipster will add new module here
 import { JhiMainComponent, NavbarComponent, FooterComponent, PageRibbonComponent, ActiveMenuDirective, ErrorComponent } from './layouts';
@@ -23,33 +22,37 @@ import { JhiMainComponent, NavbarComponent, FooterComponent, PageRibbonComponent
 @NgModule({
     imports: [
         BrowserModule,
-        DemocraticMusicBoxAppRoutingModule,
         Ng2Webstorage.forRoot({ prefix: 'jhi', separator: '-' }),
-        DemocraticMusicBoxSharedModule,
+        NgJhipsterModule.forRoot({
+            // set below to true to make alerts look like toast
+            alertAsToast: false,
+            alertTimeout: 5000,
+            i18nEnabled: true,
+            defaultI18nLang: 'en'
+        }),
+        DemocraticMusicBoxSharedModule.forRoot(),
         DemocraticMusicBoxCoreModule,
         DemocraticMusicBoxHomeModule,
-        DemocraticMusicBoxEntityModule
         // jhipster-needle-angular-add-module JHipster will add new module here
+        DemocraticMusicBoxEntityModule,
+        DemocraticMusicBoxAppRoutingModule
     ],
     declarations: [JhiMainComponent, NavbarComponent, ErrorComponent, PageRibbonComponent, ActiveMenuDirective, FooterComponent],
     providers: [
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthExpiredInterceptor,
-            multi: true,
-            deps: [StateStorageService, Injector]
+            multi: true
         },
         {
             provide: HTTP_INTERCEPTORS,
             useClass: ErrorHandlerInterceptor,
-            multi: true,
-            deps: [JhiEventManager]
+            multi: true
         },
         {
             provide: HTTP_INTERCEPTORS,
             useClass: NotificationInterceptor,
-            multi: true,
-            deps: [Injector]
+            multi: true
         }
     ],
     bootstrap: [JhiMainComponent]

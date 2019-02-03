@@ -30,7 +30,10 @@
     ],
     "clientFramework": "angularX",
     "jhiPrefix": "jhi",
-    "jhipsterVersion": "5.4.1"
+    "jhipsterVersion": "5.8.1",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": []
   },
   "git-provider": "GitHub",
   "git-company": "swimmesberger",

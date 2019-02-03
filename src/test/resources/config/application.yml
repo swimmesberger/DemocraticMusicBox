@@ -42,8 +42,9 @@ spring:
             hibernate.connection.provider_disables_autocommit: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
-            hibernate.generate_statistics: true
+            hibernate.generate_statistics: false
             hibernate.hbm2ddl.auto: validate
+            hibernate.jdbc.time_zone: UTC
     liquibase:
         contexts: test
     mail:
@@ -72,10 +73,6 @@ server:
     port: 10344
     address: localhost
 
-info:
-    project:
-        version: #project.version#
-
 # ===================================================================
 # JHipster specific properties
 #
@@ -97,9 +94,8 @@ jhipster:
     mail:
         from: test@localhost
         base-url: http://127.0.0.1:8080
-    metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        jmx.enabled: true
-        logs: # Reports Dropwizard metrics in the logs
+    metrics:
+        logs: # Reports metrics in the logs
             enabled: true
             report-frequency: 60 # in seconds
 

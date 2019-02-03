@@ -9,7 +9,6 @@ import {
     adminState,
     AuditsComponent,
     LogsComponent,
-    JhiMetricsMonitoringModalComponent,
     JhiMetricsMonitoringComponent,
     JhiHealthModalComponent,
     JhiHealthCheckComponent,
@@ -32,10 +31,10 @@ import {
         JhiHealthModalComponent,
         JhiDocsComponent,
         JhiTrackerComponent,
-        JhiMetricsMonitoringComponent,
-        JhiMetricsMonitoringModalComponent
+        JhiMetricsMonitoringComponent
     ],
-    entryComponents: [JhiHealthModalComponent, JhiMetricsMonitoringModalComponent],
+    providers: [{ provide: JhiLanguageService, useClass: JhiLanguageService }],
+    entryComponents: [JhiHealthModalComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class DemocraticMusicBoxAdminModule {
