@@ -1,0 +1,7 @@
+security:
+    oauth2:
+        client:
+            registration:
+                google:
+                    client-id: 634318871709-p2ib8v2d0t7cv5v96mepq6fjm3t6qghs.apps.googleusercontent.com
+                    client-secret: llkVXJU5sBj4kxAmFBDUdDzK

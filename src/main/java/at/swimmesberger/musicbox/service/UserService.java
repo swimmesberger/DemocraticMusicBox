@@ -2,10 +2,10 @@ package at.swimmesberger.musicbox.service;
 
 import at.swimmesberger.musicbox.config.Constants;
 import at.swimmesberger.musicbox.domain.Authority;
-import at.swimmesberger.musicbox.domain.DefaultAuthorities;
 import at.swimmesberger.musicbox.domain.User;
 import at.swimmesberger.musicbox.repository.AuthorityRepository;
 import at.swimmesberger.musicbox.repository.UserRepository;
+import at.swimmesberger.musicbox.security.AuthoritiesConstants;
 import at.swimmesberger.musicbox.security.SecurityUtils;
 import at.swimmesberger.musicbox.service.dto.UserDTO;
 
@@ -178,7 +178,7 @@ public class UserService {
     }
 
     private List<Authority> getAdministratorAuthorities(){
-        return this.authorityRepository.findAllById(Arrays.asList(DefaultAuthorities.ROLE_USER.name(), DefaultAuthorities.ROLE_ADMIN.name()));
+        return this.authorityRepository.findAllById(Arrays.asList(AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN));
     }
 
     private User syncUserWithIdP(Map<String, Object> details, User user) {

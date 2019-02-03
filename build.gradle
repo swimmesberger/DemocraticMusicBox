@@ -218,8 +218,8 @@ dependencies {
     compile "org.springframework.security:spring-security-data"
     compile "org.springframework.security:spring-security-web"
     compile "org.springframework.security:spring-security-messaging"
-    compile "org.springframework.security.oauth:spring-security-oauth2"
-    compile "org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure"
+    compile "org.springframework.security:spring-security-oauth2-client"
+    compile "org.springframework.security:spring-security-oauth2-jose"
     compile ("io.springfox:springfox-swagger2") {
         exclude module: 'mapstruct'
     }

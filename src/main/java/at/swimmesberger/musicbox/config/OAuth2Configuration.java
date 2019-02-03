@@ -30,8 +30,8 @@ import java.io.IOException;
  * If you split your application into client and server on separate domains, you might want to enable this for prod
  * mode too.
  */
-@Configuration
-@Profile("dev")
+//@Configuration
+//@Profile("dev")
 public class OAuth2Configuration {
     public static final String SAVED_LOGIN_ORIGIN_URI = OAuth2Configuration.class.getName() + "_SAVED_ORIGIN";
 
