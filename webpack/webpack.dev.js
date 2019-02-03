@@ -25,6 +25,7 @@ module.exports = (options) => webpackMerge(commonConfig({ env: ENV }), {
                 '/swagger-resources',
                 '/v2/api-docs',
                 '/h2-console',
+                '/login',
                 '/auth'
             ],
             target: `http${options.tls ? 's' : ''}://127.0.0.1:8080`,
@@ -58,7 +59,7 @@ module.exports = (options) => webpackMerge(commonConfig({ env: ENV }), {
             test: /\.ts$/,
             enforce: 'pre',
             loader: 'tslint-loader',
-            exclude: ['node_modules', new RegExp('reflect-metadata\\' + path.sep + 'Reflect\\.ts')]
+            exclude: [/(node_modules)/, new RegExp('reflect-metadata\\' + path.sep + 'Reflect\\.ts')]
         },
         {
             test: /\.ts$/,
@@ -86,7 +87,7 @@ module.exports = (options) => webpackMerge(commonConfig({ env: ENV }), {
                 },
                 'angular-router-loader'
             ],
-            exclude: ['node_modules']
+            exclude: /(node_modules)/
         },
         {
             test: /\.css$/,

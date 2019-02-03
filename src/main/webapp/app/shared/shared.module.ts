@@ -11,4 +11,10 @@ import { DemocraticMusicBoxSharedLibsModule, DemocraticMusicBoxSharedCommonModul
     exports: [DemocraticMusicBoxSharedCommonModule, HasAnyAuthorityDirective],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class DemocraticMusicBoxSharedModule {}
+export class DemocraticMusicBoxSharedModule {
+    static forRoot() {
+        return {
+            ngModule: DemocraticMusicBoxSharedModule
+        };
+    }
+}
